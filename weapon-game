@@ -2,133 +2,177 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>武器实验室：联机互动版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武器实验室：零件补完计划 (联机版)</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg-dark: #0a0b10; }
-        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .status-bar { background: #1a1c25; padding: 15px; border-radius: 8px; border: 1px solid var(--neon-blue); margin-bottom: 20px; text-align: center; }
-        .control-panel { margin-bottom: 20px; display: flex; gap: 10px; }
-        .inventory { display: flex; gap: 10px; margin-bottom: 30px; background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; border: 1px solid var(--neon-pink); }
-        .part { padding: 10px 20px; background: var(--neon-pink); cursor: pointer; font-weight: bold; border-radius: 5px; }
-        .part.disabled { opacity: 0.3; cursor: not-allowed; }
-        .weapon-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 800px; }
-        .weapon-card { background: #1a1c25; padding: 15px; border-left: 5px solid var(--neon-blue); display: flex; justify-content: space-between; }
-        .weapon-card.active { border: 2px solid var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
-        .drop-zone { display: inline-block; min-width: 40px; border-bottom: 2px solid #444; margin: 0 5px; text-align: center; color: var(--neon-blue); }
-        button { padding: 8px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; }
-        #my-id { font-weight: bold; color: var(--neon-pink); }
+        body { background: var(--bg-dark); color: white; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        
+        /* 状态栏 */
+        .status-panel { background: #1a1c25; padding: 20px; border-radius: 12px; border: 1px solid var(--neon-blue); width: 90%; max-width: 800px; margin-bottom: 20px; text-align: center; }
+        .id-display { font-size: 1.2em; margin-bottom: 10px; color: var(--neon-pink); }
+        .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        input { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #000; color: #fff; }
+        
+        /* 零件库  */
+        .inventory { display: flex; gap: 10px; margin-bottom: 30px; background: rgba(0, 243, 255, 0.05); padding: 20px; border-radius: 10px; border: 1px dashed var(--neon-blue); }
+        .part { padding: 12px 24px; background: var(--neon-pink); cursor: pointer; font-weight: bold; border-radius: 6px; box-shadow: 0 0 10px var(--neon-pink); transition: 0.2s; }
+        .part:hover { transform: scale(1.1); }
+        .part.disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+
+        /* 武器网格  */
+        .weapon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 95%; max-width: 1000px; }
+        .weapon-card { background: #161821; padding: 15px; border: 1px solid #333; border-left: 5px solid var(--neon-blue); position: relative; cursor: pointer; transition: 0.3s; }
+        .weapon-card.active { border-color: var(--neon-pink); background: #1e1525; }
+        .weapon-card .power { position: absolute; right: 10px; top: 10px; color: #888; font-size: 0.8em; }
+        .drop-zone { color: var(--neon-blue); font-weight: bold; font-size: 1.2em; border-bottom: 2px solid #444; min-width: 30px; display: inline-block; text-align: center; margin: 0 5px; }
+        
+        .btn-action { background: var(--neon-blue); border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        #turn-indicator { margin-top: 10px; font-weight: bold; color: #0f0; }
     </style>
 </head>
 <body>
 
-    <h1>⚔️ 零件补完：实时协作模式</h1>
+    <h1>⚔️ 零件补完计划：联机互动</h1>
 
-    <div class="status-bar">
-        <div>我的 ID: <span id="my-id">正在获取...</span></div>
-        <div class="control-panel">
-            <input type="text" id="peer-id-input" placeholder="输入对方 ID">
-            <button onclick="connectToPeer()">连接学生/老师</button>
-            <button id="turn-btn" onclick="toggleTurn()" style="background: var(--neon-pink);">切换操作权</button>
+    <div class="status-panel">
+        <div class="id-display">我的呼号: <span id="my-id">正在接入网络...</span></div>
+        <div class="controls">
+            <input type="text" id="target-id" placeholder="输入对方的呼号">
+            <button class="btn-action" onclick="connectToPeer()">建立连接</button>
+            <button id="swap-btn" style="background: var(--neon-pink); color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px;" onclick="swapTurn()">移交操作权</button>
         </div>
-        <div id="info">当前状态：等待连接...</div>
+        <div id="turn-indicator">等待连接中...</div>
     </div>
 
-    <div class="inventory" id="inventory">
+    <div class="inventory" id="part-box">
+        <div class="part" onclick="handlePartClick('枪')">枪</div>
+        <div class="part" onclick="handlePartClick('步')">步</div>
+        <div class="part" onclick="handlePartClick('弹')">弹</div>
+        <div class="part" onclick="handlePartClick('机')">机</div>
+        <div class="part" onclick="handlePartClick('手')">手</div>
+        <div class="part" onclick="handlePartClick('器')">器</div>
+        <div class="part" onclick="handlePartClick('轮')">轮</div>
+    </div>
+
+    <div class="weapon-grid" id="weapon-grid">
         </div>
 
-    <div class="weapon-list" id="weaponList"></div>
-
     <script>
-        const parts = ['枪', '步', '弹', '机', '手', '器', '轮']; // 核心零件 
-        const weapons = [
-            { id: 1, name: "突击", ans: "步枪", power: 300 }, // [cite: 4]
-            { id: 4, name: "左", ans: "轮", power: 165 }, // [cite: 4]
-            { id: 7, name: "榴", ans: "弹", suffix: "发射", ans2: "器", power: 110 }, // [cite: 4]
-            { id: 10, name: "加特林", ans: "机枪", power: 100 }, // [cite: 5]
-            { id: 12, name: "狙击", ans: "步枪", power: 90 }, // [cite: 5]
-            { id: 18, name: "冲锋", ans: "枪", power: 50 } // [cite: 5]
+        // 游戏数据 
+        const weaponData = [
+            { id: 1, prefix: "突击", ans: "步枪", power: 300 },
+            { id: 2, prefix: "异能", ans: "枪", power: 210 },
+            { id: 3, prefix: "汽油", ans: "弹", power: 200 },
+            { id: 4, prefix: "左", ans: "轮", power: 165 },
+            { id: 7, prefix: "榴", ans: "弹发射器", power: 110 },
+            { id: 10, prefix: "加特林", ans: "机枪", power: 100 },
+            { id: 12, prefix: "狙击", ans: "步枪", power: 90 },
+            { id: 18, prefix: "冲锋", ans: "枪", power: 50 }
         ];
 
         let peer = new Peer();
         let conn = null;
-        let myTurn = true; 
-        let selectedWeaponIdx = 0;
+        let isMyTurn = true; 
+        let activeWeaponIdx = 0;
+        let currentAnswers = Array(weaponData.length).fill("");
 
-        peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-
-        // 监听连接
+        // PeerJS 初始化
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+        
         peer.on('connection', c => {
             conn = c;
             setupConn();
-            document.getElementById('info').innerText = "学生已加入！你现在是【老师】，请指派任务。";
+            isMyTurn = true; // 老师端默认为先手
+            updateUI();
         });
 
         function connectToPeer() {
-            const id = document.getElementById('peer-id-input').value;
+            const id = document.getElementById('target-id').value;
             conn = peer.connect(id);
             setupConn();
-            myTurn = false; // 学生加入默认先看老师操作
-            document.getElementById('info').innerText = "已连接老师！请等待指派任务。";
+            isMyTurn = false; // 学生端默认为后手
+            updateUI();
         }
 
         function setupConn() {
             conn.on('data', data => {
-                if (data.type === 'sync_game') {
-                    renderGame(data.idx, data.filled);
-                    myTurn = data.turn;
+                if (data.type === 'SYNC') {
+                    activeWeaponIdx = data.activeWeaponIdx;
+                    currentAnswers = data.currentAnswers;
+                    isMyTurn = data.isMyTurn;
+                    renderWeapons();
                     updateUI();
                 }
             });
+            document.getElementById('turn-indicator').innerText = "通信已建立";
         }
 
-        function toggleTurn() {
-            myTurn = !myTurn;
-            sendSync();
+        function sync() {
+            if (conn) {
+                conn.send({
+                    type: 'SYNC',
+                    activeWeaponIdx,
+                    currentAnswers,
+                    isMyTurn: !isMyTurn // 发给对方时，对方的 Turn 是取反的
+                });
+            }
+        }
+
+        // 核心游戏逻辑
+        function renderWeapons() {
+            const grid = document.getElementById('weapon-grid');
+            grid.innerHTML = '';
+            weaponData.forEach((w, i) => {
+                const card = document.createElement('div');
+                card.className = `weapon-card ${i === activeWeaponIdx ? 'active' : ''}`;
+                card.onclick = () => {
+                    if (isMyTurn) {
+                        activeWeaponIdx = i;
+                        sync();
+                        renderWeapons();
+                    }
+                };
+                
+                const displayAns = currentAnswers[i] || "？";
+                card.innerHTML = `
+                    <div class="power">力量: ${w.power}</div>
+                    <span>${w.id}. ${w.prefix}</span>
+                    <span class="drop-zone">${displayAns}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function handlePartClick(char) {
+            if (!isMyTurn) return;
+            currentAnswers[activeWeaponIdx] += char;
+            // 校验是否完整
+            if (currentAnswers[activeWeaponIdx] === weaponData[activeWeaponIdx].ans) {
+                alert("零件补完成功！战力恢复！");
+            }
+            sync();
+            renderWeapons();
+        }
+
+        function swapTurn() {
+            isMyTurn = !isMyTurn;
+            sync();
             updateUI();
         }
 
         function updateUI() {
-            document.getElementById('info').innerText = myTurn ? "🟢 轮到你了！请点击零件或选择武器" : "🔴 对方正在操作...";
-            document.querySelectorAll('.part').forEach(p => p.classList.toggle('disabled', !myTurn));
-        }
-
-        function sendSync() {
-            if (conn) {
-                conn.send({ type: 'sync_game', idx: selectedWeaponIdx, turn: !myTurn });
-            }
-        }
-
-        // 渲染界面
-        function renderGame() {
-            const inv = document.getElementById('inventory');
-            inv.innerHTML = '';
-            parts.forEach(p => {
-                const btn = document.createElement('div');
-                btn.className = 'part';
-                btn.innerText = p;
-                btn.onclick = () => { if(myTurn) fillPart(p); };
-                inv.appendChild(btn);
-            });
-
-            const list = document.getElementById('weaponList');
-            list.innerHTML = '';
-            weapons.forEach((w, i) => {
-                const card = document.createElement('div');
-                card.className = `weapon-card ${i === selectedWeaponIdx ? 'active' : ''}`;
-                card.onclick = () => { if(myTurn) { selectedWeaponIdx = i; sendSync(); renderGame(); } };
-                card.innerHTML = `<span>${w.name} <span class="drop-zone" id="dz-${i}">?</span></span> <span>${w.power}</span>`;
-                list.appendChild(card);
+            const indicator = document.getElementById('turn-indicator');
+            indicator.innerText = isMyTurn ? "🟢 你的轮次：请选择武器或填入零件" : "🔴 对方轮次：观察补完进度";
+            
+            // 禁用不属于自己轮次的零件点击
+            document.querySelectorAll('.part').forEach(p => {
+                p.classList.toggle('disabled', !isMyTurn);
             });
         }
 
-        function fillPart(p) {
-            document.getElementById(`dz-${selectedWeaponIdx}`).innerText = p;
-            sendSync();
-        }
-
-        renderGame();
-        updateUI();
+        renderWeapons();
     </script>
 </body>
 </html>
