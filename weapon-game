@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>武器实验室：零件补完计划</title>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-dark: #0a0b10;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Microsoft YaHei, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        .inventory {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--neon-pink);
+        }
+        .part {
+            padding: 10px 20px;
+            background: var(--neon-pink);
+            cursor: grab;
+            font-weight: bold;
+            border-radius: 5px;
+            user-select: none;
+        }
+        .weapon-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .weapon-card {
+            background: #1a1c25;
+            padding: 15px;
+            border-left: 5px solid var(--neon-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .drop-zone {
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            border-bottom: 20px solid #444;
+            margin: 0 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .drop-zone.filled { color: var(--neon-blue); border-bottom: none; font-weight: bold; font-size: 1.2em; }
+        .power-tag { color: #888; font-size: 0.8em; }
+        #check-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: var(--neon-blue);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚔️ 零件补完计划</h1>
+    <p>任务：请将下方的零件拖入武器标签中，恢复战力值！</p>
+
+    <div class="inventory" id="inventory">
+        <div class="part" draggable="true">枪</div>
+        <div class="part" draggable="true">步</div>
+        <div class="part" draggable="true">弹</div>
+        <div class="part" draggable="true">机</div>
+        <div class="part" draggable="true">手</div>
+        <div class="part" draggable="true">器</div>
+        <div class="part" draggable="true">轮</div>
+    </div>
+
+    <div class="weapon-list" id="weaponList">
+        </div>
+
+    <button id="check-btn" onclick="checkAnswers()">验证补完结果</button>
+
+    <script>
+        const weapons = [
+            { prefix: "突击", parts: "步枪", power: 300 },
+            { prefix: "异能", parts: "枪", power: 210 },
+            { prefix: "汽油", parts: "弹", power: 200 },
+            { prefix: "左", parts: "轮", power: 165 },
+            { prefix: "扭曲", parts: "器", power: 130 },
+            { prefix: "榴", parts: "弹发射器", power: 110 },
+            { prefix: "反器材", parts: "步枪", power: 105 },
+            { prefix: "加特林", parts: "机枪", power: 100 },
+            { prefix: "狙击", parts: "步枪", power: 90 },
+            { prefix: "冲锋", parts: "枪", power: 50 },
+            { prefix: "烟雾", parts: "弹", power: 1 }
+        ];
+
+        const listContainer = document.getElementById('weaponList');
+
+        // 初始化游戏板
+        weapons.forEach((w, index) => {
+            const card = document.createElement('div');
+            card.className = 'weapon-card';
+            
+            // 简单处理：将目标零件替换为坑位
+            let displayHTML = `<span>${w.prefix}`;
+            for(let i=0; i<w.parts.length; i++) {
+                displayHTML += `<span class="drop-zone" data-ans="${w.parts[i]}" data-id="${index}-${i}"></span>`;
+            }
+            displayHTML += `</span><span class="power-tag">力量值: ${w.power}</span>`;
+            
+            card.innerHTML = displayHTML;
+            listContainer.appendChild(card);
+        });
+
+        // 拖拽逻辑
+        let draggedPart = null;
+
+        document.querySelectorAll('.part').forEach(p => {
+            p.addEventListener('dragstart', (e) => {
+                draggedPart = e.target.innerText;
+            });
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', e => e.preventDefault());
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                e.target.innerText = draggedPart;
+                e.target.classList.add('filled');
+            });
+        });
+
+        function checkAnswers() {
+            let correct = 0;
+            const zones = document.querySelectorAll('.drop-zone');
+            zones.forEach(z => {
+                if(z.innerText === z.getAttribute('data-ans')) {
+                    correct++;
+                    z.style.color = '#00ff00';
+                } else {
+                    z.style.color = 'red';
+                }
+            });
+            alert(`补完计划完成！正确零件数：${correct} / ${zones.length}`);
+        }
+    </script>
+</body>
+</html>
