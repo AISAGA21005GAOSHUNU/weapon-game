@@ -102,236 +102,241 @@
     <div id="msg-overlay"></div>
 
     <script>
-        // 20种题库 (无图片版)
-        const allWeapons = [
-            { pattern: "突击[步][枪]", power: 300 },
-            { pattern: "异能[枪]", power: 210 },
-            { pattern: "汽油[弹]", power: 200 },
-            { pattern: "左[轮]", power: 165 },
-            { pattern: "扭曲[器]", power: 130 },
-            { pattern: "变形[机]", power: 120 },
-            { pattern: "榴[弹]发射[器]", power: 110 },
-            { pattern: "反[器]材[步][枪]", power: 105 },
-            { pattern: "[机][枪]", power: 100 },
-            { pattern: "加特林[机][枪]", power: 100 },
-            { pattern: "永冻[枪]", power: 95 },
-            { pattern: "狙击[步][枪]", power: 90 },
-            { pattern: "竞敌重槌[器]", power: 80 },
-            { pattern: "[手][枪]", power: 75 },
-            { pattern: "权[器]", power: 70 },
-            { pattern: "霰[弹][枪]", power: 65 },
-            { pattern: "卡宾[枪]", power: 60 },
-            { pattern: "冲锋[枪]", power: 50 },
-            { pattern: "信号[枪]", power: 30 },
-            { pattern: "烟雾[弹]", power: 1 }
-        ];
+        // 确保整个网页载入完成后再执行核心逻辑，防止按钮失效
+        window.onload = function() {
+            // 20种题库 (纯文字全简体)
+            const allWeapons = [
+                { pattern: "突击[步][枪]", power: 300 },
+                { pattern: "异能[枪]", power: 210 },
+                { pattern: "汽油[弹]", power: 200 },
+                { pattern: "左[轮]", power: 165 },
+                { pattern: "扭曲[器]", power: 130 },
+                { pattern: "变形[机]", power: 120 },
+                { pattern: "榴[弹]发射[器]", power: 110 },
+                { pattern: "反[器]材[步][枪]", power: 105 },
+                { pattern: "[机][枪]", power: 100 },
+                { pattern: "加特林[机][枪]", power: 100 },
+                { pattern: "永冻[枪]", power: 95 },
+                { pattern: "狙击[步][枪]", power: 90 },
+                { pattern: "竞敌重槌[器]", power: 80 },
+                { pattern: "[手][枪]", power: 75 },
+                { pattern: "权[器]", power: 70 },
+                { pattern: "霰[弹][枪]", power: 65 },
+                { pattern: "卡宾[枪]", power: 60 },
+                { pattern: "冲锋[枪]", power: 50 },
+                { pattern: "信号[枪]", power: 30 },
+                { pattern: "烟雾[弹]", power: 1 }
+            ];
 
-        const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
+            const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
 
-        let players = 1;
-        let turn = 1; 
-        let scores = { 1: 0, 2: 0 };
-        let questions = [];
-        let currentQ = 0;
-        let currentAnswers = []; 
-        let userFills = []; 
+            window.players = 1;
+            window.turn = 1; 
+            window.scores = { 1: 0, 2: 0 };
+            window.questions = [];
+            window.currentQ = 0;
+            window.currentAnswers = []; 
+            window.userFills = []; 
 
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
+            window.shuffle = function(array) {
+                return array.sort(() => Math.random() - 0.5);
+            };
 
-        function startGame(mode, startingPlayer) {
-            players = mode;
-            turn = startingPlayer;
-            
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            
-            if (players === 2) {
-                document.getElementById('p2-panel').style.display = 'block';
-            }
-
-            questions = shuffle([...allWeapons]);
-            currentQ = 0;
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            if (currentQ >= questions.length) {
-                endGame();
-                return;
-            }
-
-            document.getElementById('p1-panel').classList.toggle('active', turn === 1);
-            document.getElementById('p2-panel').classList.toggle('active', turn === 2);
-
-            let q = questions[currentQ];
-            document.getElementById('q-power').innerText = q.power;
-
-            let displayHTML = "";
-            currentAnswers = [];
-            userFills = [];
-            
-            let partsRegex = /\[(.*?)\]/g;
-            let lastIdx = 0;
-            let match;
-            let blankIndex = 0;
-
-            while ((match = partsRegex.exec(q.pattern)) !== null) {
-                displayHTML += q.pattern.substring(lastIdx, match.index);
-                displayHTML += `<span class="drop-zone" id="dz-${blankIndex}" onclick="clearSingle(${blankIndex})"></span>`;
-                currentAnswers.push(match[1]);
-                userFills.push("");
-                blankIndex++;
-                lastIdx = partsRegex.lastIndex;
-            }
-            displayHTML += q.pattern.substring(lastIdx);
-            
-            document.getElementById('q-text').innerHTML = displayHTML;
-
-            // 洗牌底部零件按钮
-            let shuffledParts = shuffle([...baseParts]);
-            let invHTML = "";
-            shuffledParts.forEach(p => {
-                invHTML += `<div class="part" onclick="fillBlank('${p}')">${p}</div>`;
-            });
-            document.getElementById('inventory').innerHTML = invHTML;
-
-            document.getElementById('check-btn').disabled = false;
-        }
-
-        function fillBlank(char) {
-            let emptyIdx = userFills.indexOf("");
-            if (emptyIdx !== -1) {
-                userFills[emptyIdx] = char;
-                document.getElementById(`dz-${emptyIdx}`).innerText = char;
-            }
-        }
-
-        function clearSingle(idx) {
-            userFills[idx] = "";
-            let dz = document.getElementById(`dz-${idx}`);
-            dz.innerText = "";
-            dz.classList.remove('corrected');
-        }
-
-        function clearFills() {
-            userFills = userFills.map(() => "");
-            document.querySelectorAll('.drop-zone').forEach(el => {
-                el.innerText = "";
-                el.classList.remove('corrected');
-            });
-        }
-
-        function checkAnswer() {
-            if (userFills.includes("")) {
-                alert("请填满所有零件空缺！");
-                return;
-            }
-
-            // 防止手速太快狂点
-            document.getElementById('check-btn').disabled = true;
-
-            let isCorrect = userFills.join("") === currentAnswers.join("");
-            let q = questions[currentQ];
-
-            if (isCorrect) {
-                showMsg(`✅ 补完成功！ +${q.power}`, "#0f0");
-                scores[turn] += q.power;
-                document.getElementById(`p${turn}-score`).innerText = scores[turn];
+            window.startGame = function(mode, startingPlayer) {
+                window.players = mode;
+                window.turn = startingPlayer;
                 
-                setTimeout(nextPlayerQuestion, 1200);
-            } else {
-                showMsg("❌ 零件错误！", "#f00");
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
                 
-                // 纠错机制，将正确答案填入并显示黄色
-                currentAnswers.forEach((ans, idx) => {
-                    let dz = document.getElementById(`dz-${idx}`);
-                    dz.innerText = ans;
-                    dz.classList.add('corrected');
+                if (window.players === 2) {
+                    document.getElementById('p2-panel').style.display = 'block';
+                }
+
+                window.questions = window.shuffle([...allWeapons]);
+                window.currentQ = 0;
+                window.loadQuestion();
+            };
+
+            window.loadQuestion = function() {
+                if (window.currentQ >= window.questions.length) {
+                    window.endGame();
+                    return;
+                }
+
+                document.getElementById('p1-panel').classList.toggle('active', window.turn === 1);
+                document.getElementById('p2-panel').classList.toggle('active', window.turn === 2);
+
+                let q = window.questions[window.currentQ];
+                document.getElementById('q-power').innerText = q.power;
+
+                let displayHTML = "";
+                window.currentAnswers = [];
+                window.userFills = [];
+                
+                let partsRegex = /\[(.*?)\]/g;
+                let lastIdx = 0;
+                let match;
+                let blankIndex = 0;
+
+                while ((match = partsRegex.exec(q.pattern)) !== null) {
+                    displayHTML += q.pattern.substring(lastIdx, match.index);
+                    displayHTML += `<span class="drop-zone" id="dz-${blankIndex}" onclick="clearSingle(${blankIndex})"></span>`;
+                    window.currentAnswers.push(match[1]);
+                    window.userFills.push("");
+                    blankIndex++;
+                    lastIdx = partsRegex.lastIndex;
+                }
+                displayHTML += q.pattern.substring(lastIdx);
+                
+                document.getElementById('q-text').innerHTML = displayHTML;
+
+                let shuffledParts = window.shuffle([...baseParts]);
+                let invHTML = "";
+                shuffledParts.forEach(p => {
+                    invHTML += `<div class="part" onclick="fillBlank('${p}')">${p}</div>`;
                 });
+                document.getElementById('inventory').innerHTML = invHTML;
 
-                // 停留2.5秒让学生观看正确答案
-                setTimeout(nextPlayerQuestion, 2500);
-            }
-        }
+                document.getElementById('check-btn').disabled = false;
+            };
 
-        function nextPlayerQuestion() {
-            currentQ++;
-            if (players === 2) {
-                turn = turn === 1 ? 2 : 1;
-            }
-            loadQuestion();
-        }
+            window.fillBlank = function(char) {
+                let emptyIdx = window.userFills.indexOf("");
+                if (emptyIdx !== -1) {
+                    window.userFills[emptyIdx] = char;
+                    document.getElementById(`dz-${emptyIdx}`).innerText = char;
+                }
+            };
 
-        function showMsg(text, color) {
-            let overlay = document.getElementById('msg-overlay');
-            overlay.innerText = text;
-            overlay.style.color = color;
-            overlay.style.opacity = 1;
-            setTimeout(() => overlay.style.opacity = 0, 1000);
-        }
+            window.clearSingle = function(idx) {
+                window.userFills[idx] = "";
+                let dz = document.getElementById(`dz-${idx}`);
+                dz.innerText = "";
+                dz.classList.remove('corrected');
+            };
 
-        function endGame() {
-            document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('end-screen').style.display = 'block';
-            
-            let winText = "";
-            let today = new Date().toLocaleDateString();
-
-            if (players === 1) {
-                winText = `单人任务完成！<br>总力量值: <span style="color:#fff">${scores[1]}</span>`;
-                saveScore(scores[1], "单人玩家", today);
-            } else {
-                if (scores[1] > scores[2]) winText = `🏆 1P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else if (scores[2] > scores[1]) winText = `🏆 2P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">双方皆为 ${scores[1]} 分</span>`;
-                
-                saveScore(scores[1], "1P 玩家", today);
-                saveScore(scores[2], "2P 玩家", today);
-            }
-            document.getElementById('winner-text').innerHTML = winText;
-            
-            renderLeaderboard();
-        }
-
-        function saveScore(score, playerName, date) {
-            if (score === 0) return; 
-            let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
-            board.push({ name: playerName, score: score, date: date });
-            // 从高到低排序
-            board.sort((a, b) => b.score - a.score);
-            // 截取前五名
-            board = board.slice(0, 5);
-            localStorage.setItem('weaponLeaderboard', JSON.stringify(board));
-        }
-
-        function renderLeaderboard() {
-            let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
-            let tbody = `<tr><th>排名</th><th>身分</th><th>力量总计</th><th>日期</th></tr>`;
-            
-            if (board.length === 0) {
-                tbody += `<tr><td colspan="4" style="text-align:center;">尚无记录</td></tr>`;
-            } else {
-                board.forEach((entry, i) => {
-                    let rankClass = i < 3 ? `rank-${i+1}` : '';
-                    tbody += `<tr>
-                        <td class="${rankClass}">${i + 1}</td>
-                        <td>${entry.name}</td>
-                        <td style="color:var(--neon-pink); font-weight:bold;">${entry.score}</td>
-                        <td>${entry.date}</td>
-                    </tr>`;
+            window.clearFills = function() {
+                window.userFills = window.userFills.map(() => "");
+                document.querySelectorAll('.drop-zone').forEach(el => {
+                    el.innerText = "";
+                    el.classList.remove('corrected');
                 });
-            }
-            document.getElementById('leaderboard-table').innerHTML = tbody;
-        }
+            };
 
-        function clearLeaderboard() {
-            if(confirm("确定要清除所有的排行榜记录吗？")) {
-                localStorage.removeItem('weaponLeaderboard');
-                renderLeaderboard();
-            }
-        }
+            window.checkAnswer = function() {
+                if (window.userFills.includes("")) {
+                    alert("请填满所有零件空缺！");
+                    return;
+                }
+
+                document.getElementById('check-btn').disabled = true;
+
+                let isCorrect = window.userFills.join("") === window.currentAnswers.join("");
+                let q = window.questions[window.currentQ];
+
+                if (isCorrect) {
+                    window.showMsg(`✅ 补完成功！ +${q.power}`, "#0f0");
+                    window.scores[window.turn] += q.power;
+                    document.getElementById(`p${window.turn}-score`).innerText = window.scores[window.turn];
+                    
+                    setTimeout(window.nextPlayerQuestion, 1200);
+                } else {
+                    window.showMsg("❌ 零件错误！", "#f00");
+                    
+                    window.currentAnswers.forEach((ans, idx) => {
+                        let dz = document.getElementById(`dz-${idx}`);
+                        dz.innerText = ans;
+                        dz.classList.add('corrected');
+                    });
+
+                    setTimeout(window.nextPlayerQuestion, 2500);
+                }
+            };
+
+            window.nextPlayerQuestion = function() {
+                window.currentQ++;
+                if (window.players === 2) {
+                    window.turn = window.turn === 1 ? 2 : 1;
+                }
+                window.loadQuestion();
+            };
+
+            window.showMsg = function(text, color) {
+                let overlay = document.getElementById('msg-overlay');
+                overlay.innerText = text;
+                overlay.style.color = color;
+                overlay.style.opacity = 1;
+                setTimeout(() => overlay.style.opacity = 0, 1000);
+            };
+
+            window.endGame = function() {
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('end-screen').style.display = 'block';
+                
+                let winText = "";
+                let today = new Date().toLocaleDateString();
+
+                if (window.players === 1) {
+                    winText = `单人任务完成！<br>总力量值: <span style="color:#fff">${window.scores[1]}</span>`;
+                    window.saveScore(window.scores[1], "单人玩家", today);
+                } else {
+                    if (window.scores[1] > window.scores[2]) winText = `🏆 1P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${window.scores[1]} 分 / 2P: ${window.scores[2]} 分</span>`;
+                    else if (window.scores[2] > window.scores[1]) winText = `🏆 2P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${window.scores[1]} 分 / 2P: ${window.scores[2]} 分</span>`;
+                    else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">双方皆为 ${window.scores[1]} 分</span>`;
+                    
+                    window.saveScore(window.scores[1], "1P 玩家", today);
+                    window.saveScore(window.scores[2], "2P 玩家", today);
+                }
+                document.getElementById('winner-text').innerHTML = winText;
+                
+                window.renderLeaderboard();
+            };
+
+            window.saveScore = function(score, playerName, date) {
+                if (score === 0) return; 
+                try {
+                    let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
+                    board.push({ name: playerName, score: score, date: date });
+                    board.sort((a, b) => b.score - a.score);
+                    board = board.slice(0, 5);
+                    localStorage.setItem('weaponLeaderboard', JSON.stringify(board));
+                } catch (e) {
+                    console.error("无法保存排行榜记录:", e);
+                }
+            };
+
+            window.renderLeaderboard = function() {
+                try {
+                    let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
+                    let tbody = `<tr><th>排名</th><th>身分</th><th>力量总计</th><th>日期</th></tr>`;
+                    
+                    if (board.length === 0) {
+                        tbody += `<tr><td colspan="4" style="text-align:center;">尚无记录</td></tr>`;
+                    } else {
+                        board.forEach((entry, i) => {
+                            let rankClass = i < 3 ? `rank-${i+1}` : '';
+                            tbody += `<tr>
+                                <td class="${rankClass}">${i + 1}</td>
+                                <td>${entry.name}</td>
+                                <td style="color:var(--neon-pink); font-weight:bold;">${entry.score}</td>
+                                <td>${entry.date}</td>
+                            </tr>`;
+                        });
+                    }
+                    document.getElementById('leaderboard-table').innerHTML = tbody;
+                } catch (e) {
+                    document.getElementById('leaderboard-table').innerHTML = `<tr><td colspan="4">读取数据失败</td></tr>`;
+                }
+            };
+
+            window.clearLeaderboard = function() {
+                if(confirm("确定要清除所有的排行榜记录吗？")) {
+                    localStorage.removeItem('weaponLeaderboard');
+                    window.renderLeaderboard();
+                }
+            };
+        };
     </script>
 </body>
 </html>
