@@ -3,46 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>武器實驗室：終極對決 (排行榜版)</title>
+    <title>武器实验室：终极对决</title>
     <style>
         :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg-dark: #0a0b10; }
         body { background: var(--bg-dark); color: white; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; text-align: center; }
         
-        /* 開始畫面 */
+        /* 开始画面 */
         #start-screen { margin-top: 50px; }
         .mode-btn { display: block; width: 300px; margin: 15px auto; background: var(--neon-blue); color: #000; border: none; padding: 15px 20px; font-size: 1.3em; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--neon-blue); }
         .mode-btn:hover { transform: scale(1.05); background: #fff; }
 
-        /* 遊戲畫面 */
+        /* 游戏画面 */
         #game-screen { display: none; width: 100%; max-width: 800px; }
         
-        /* 記分板 */
+        /* 记分板 */
         .scoreboard { display: flex; justify-content: space-around; background: #1a1c25; padding: 15px; border-radius: 10px; border: 2px solid #333; margin-bottom: 20px; }
         .player-score { font-size: 1.5em; font-weight: bold; color: #555; transition: 0.3s; padding: 10px; border-radius: 8px; }
         .player-score.active { color: var(--neon-blue); background: rgba(0, 243, 255, 0.1); text-shadow: 0 0 10px var(--neon-blue); transform: scale(1.05); border: 1px solid var(--neon-blue); }
         .score-val { color: var(--neon-pink); font-size: 1.2em; }
 
-        /* 題目區 */
-        .question-box { background: rgba(0, 243, 255, 0.05); border: 1px dashed var(--neon-blue); padding: 40px 20px; border-radius: 10px; margin-bottom: 20px; position: relative; }
-        .power-tag { position: absolute; top: 10px; right: 10px; color: var(--neon-pink); font-weight: bold; font-size: 1.2em; }
-        .weapon-display { font-size: 2.5em; font-weight: bold; letter-spacing: 5px; margin: 20px 0; }
-        .drop-zone { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        /* 题目区 */
+        .question-box { background: rgba(0, 243, 255, 0.05); border: 1px dashed var(--neon-blue); padding: 50px 20px; border-radius: 10px; margin-bottom: 20px; position: relative; }
+        .power-tag { position: absolute; top: 10px; right: 10px; color: var(--neon-pink); font-weight: bold; font-size: 1.2em; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; }
+        
+        .weapon-display { font-size: 3em; font-weight: bold; letter-spacing: 5px; margin: 20px 0; }
+        .drop-zone { display: inline-block; width: 60px; height: 60px; line-height: 60px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
-        /* 零件庫 */
+        /* 零件库 */
         .inventory { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
         .part { width: 60px; height: 60px; line-height: 60px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.8em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
         .part:active { transform: translateY(5px); background: var(--neon-pink); }
 
-        /* 控制按鈕 */
+        /* 控制按钮 */
         .controls button { padding: 12px 30px; font-size: 1.2em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 0 10px; }
         #check-btn { background: var(--neon-blue); color: #000; }
         #clear-btn { background: #555; color: #fff; }
 
-        /* 提示訊息 */
-        #msg-overlay { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; text-shadow: 0 0 20px #000; white-space: nowrap; }
+        /* 提示讯息 */
+        #msg-overlay { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; text-shadow: 0 0 20px #000; white-space: nowrap; }
         
-        /* 結算畫面與排行榜 */
+        /* 结算画面与排行榜 */
         #end-screen { display: none; margin-top: 50px; width: 100%; max-width: 600px; }
         #winner-text { font-size: 2em; color: var(--neon-pink); margin-bottom: 20px; text-shadow: 0 0 15px var(--neon-pink); }
         
@@ -56,13 +57,13 @@
 </head>
 <body>
 
-    <h1 style="color: var(--neon-pink);">⚔️ 零件補完計劃</h1>
+    <h1 style="color: var(--neon-pink);">⚔️ 零件补完计划</h1>
 
     <div id="start-screen">
-        <h2>請選擇任務模式</h2>
-        <button class="mode-btn" onclick="startGame(1, 1)">👤 單人極限挑戰</button>
-        <button class="mode-btn" onclick="startGame(2, 1)">⚔️ 雙人對戰 (1P 先發)</button>
-        <button class="mode-btn" onclick="startGame(2, 2)">⚔️ 雙人對戰 (2P 先發)</button>
+        <h2>请选择任务模式</h2>
+        <button class="mode-btn" onclick="startGame(1, 1)">👤 单人极限挑战</button>
+        <button class="mode-btn" onclick="startGame(2, 1)">⚔️ 双人对战 (1P 先发)</button>
+        <button class="mode-btn" onclick="startGame(2, 2)">⚔️ 双人对战 (2P 先发)</button>
     </div>
 
     <div id="game-screen">
@@ -72,7 +73,7 @@
         </div>
 
         <div class="question-box">
-            <div class="power-tag">本題力量值: <span id="q-power">0</span></div>
+            <div class="power-tag">力量值: <span id="q-power">0</span></div>
             <div id="q-text" class="weapon-display"></div>
         </div>
 
@@ -80,7 +81,7 @@
 
         <div class="controls">
             <button id="clear-btn" onclick="clearFills()">清除重填</button>
-            <button id="check-btn" onclick="checkAnswer()">驗證發射</button>
+            <button id="check-btn" onclick="checkAnswer()">验证发射</button>
         </div>
     </div>
 
@@ -88,43 +89,44 @@
         <div id="winner-text"></div>
         
         <div id="leaderboard-container">
-            <h3 style="color: var(--neon-blue);">🏆 武器實驗室 最高力量排行榜</h3>
+            <h3 style="color: var(--neon-blue);">🏆 武器实验室 最高力量排行榜</h3>
             <table class="leaderboard-table" id="leaderboard-table">
                 </table>
         </div>
 
         <br>
-        <button class="mode-btn" onclick="location.reload()" style="width: 200px;">重新開始任務</button>
-        <button class="mode-btn" onclick="clearLeaderboard()" style="width: 200px; background: #555; box-shadow: none; font-size: 1em;">清除排行榜數據</button>
+        <button class="mode-btn" onclick="location.reload()" style="width: 200px;">重新开始任务</button>
+        <button class="mode-btn" onclick="clearLeaderboard()" style="width: 200px; background: #555; box-shadow: none; font-size: 1em;">清除排行榜数据</button>
     </div>
 
     <div id="msg-overlay"></div>
 
     <script>
+        // 20种题库 (无图片版)
         const allWeapons = [
-            { pattern: "突擊[步][槍]", power: 300 },
-            { pattern: "異能[槍]", power: 210 },
-            { pattern: "汽油[彈]", power: 200 },
-            { pattern: "左[輪]", power: 165 },
+            { pattern: "突击[步][枪]", power: 300 },
+            { pattern: "异能[枪]", power: 210 },
+            { pattern: "汽油[弹]", power: 200 },
+            { pattern: "左[轮]", power: 165 },
             { pattern: "扭曲[器]", power: 130 },
-            { pattern: "變形[機]", power: 120 },
-            { pattern: "榴[彈]發射[器]", power: 110 },
-            { pattern: "反[器]材[步][槍]", power: 105 },
-            { pattern: "[機][槍]", power: 100 },
-            { pattern: "加特林[機][槍]", power: 100 },
-            { pattern: "永凍[槍]", power: 95 },
-            { pattern: "狙擊[步][槍]", power: 90 },
-            { pattern: "競敵重槌[器]", power: 80 },
-            { pattern: "[手][槍]", power: 75 },
-            { pattern: "權[器]", power: 70 },
-            { pattern: "霰[彈][槍]", power: 65 },
-            { pattern: "卡賓[槍]", power: 60 },
-            { pattern: "衝鋒[槍]", power: 50 },
-            { pattern: "信號[槍]", power: 30 },
-            { pattern: "煙霧[彈]", power: 1 }
+            { pattern: "变形[机]", power: 120 },
+            { pattern: "榴[弹]发射[器]", power: 110 },
+            { pattern: "反[器]材[步][枪]", power: 105 },
+            { pattern: "[机][枪]", power: 100 },
+            { pattern: "加特林[机][枪]", power: 100 },
+            { pattern: "永冻[枪]", power: 95 },
+            { pattern: "狙击[步][枪]", power: 90 },
+            { pattern: "竞敌重槌[器]", power: 80 },
+            { pattern: "[手][枪]", power: 75 },
+            { pattern: "权[器]", power: 70 },
+            { pattern: "霰[弹][枪]", power: 65 },
+            { pattern: "卡宾[枪]", power: 60 },
+            { pattern: "冲锋[枪]", power: 50 },
+            { pattern: "信号[枪]", power: 30 },
+            { pattern: "烟雾[弹]", power: 1 }
         ];
 
-        const baseParts = ['槍', '步', '彈', '機', '手', '器', '輪'];
+        const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
 
         let players = 1;
         let turn = 1; 
@@ -187,6 +189,7 @@
             
             document.getElementById('q-text').innerHTML = displayHTML;
 
+            // 洗牌底部零件按钮
             let shuffledParts = shuffle([...baseParts]);
             let invHTML = "";
             shuffledParts.forEach(p => {
@@ -194,7 +197,6 @@
             });
             document.getElementById('inventory').innerHTML = invHTML;
 
-            // 鎖定按鈕防連點
             document.getElementById('check-btn').disabled = false;
         }
 
@@ -223,33 +225,33 @@
 
         function checkAnswer() {
             if (userFills.includes("")) {
-                alert("請填滿所有零件空缺！");
+                alert("请填满所有零件空缺！");
                 return;
             }
 
-            // 防止快速連點
+            // 防止手速太快狂点
             document.getElementById('check-btn').disabled = true;
 
             let isCorrect = userFills.join("") === currentAnswers.join("");
             let q = questions[currentQ];
 
             if (isCorrect) {
-                showMsg(`✅ 補完成功！ +${q.power}`, "#0f0");
+                showMsg(`✅ 补完成功！ +${q.power}`, "#0f0");
                 scores[turn] += q.power;
                 document.getElementById(`p${turn}-score`).innerText = scores[turn];
                 
                 setTimeout(nextPlayerQuestion, 1200);
             } else {
-                showMsg("❌ 零件錯誤！", "#f00");
+                showMsg("❌ 零件错误！", "#f00");
                 
-                // 糾錯機制：把正確答案填進去並亮黃色
+                // 纠错机制，将正确答案填入并显示黄色
                 currentAnswers.forEach((ans, idx) => {
                     let dz = document.getElementById(`dz-${idx}`);
                     dz.innerText = ans;
                     dz.classList.add('corrected');
                 });
 
-                // 給學生 2.5 秒看正確答案，再換下一題
+                // 停留2.5秒让学生观看正确答案
                 setTimeout(nextPlayerQuestion, 2500);
             }
         }
@@ -270,7 +272,6 @@
             setTimeout(() => overlay.style.opacity = 0, 1000);
         }
 
-        // --- 排行榜系統 ---
         function endGame() {
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('end-screen').style.display = 'block';
@@ -279,12 +280,12 @@
             let today = new Date().toLocaleDateString();
 
             if (players === 1) {
-                winText = `單人任務完成！<br>總力量值: <span style="color:#fff">${scores[1]}</span>`;
-                saveScore(scores[1], "單人玩家", today);
+                winText = `单人任务完成！<br>总力量值: <span style="color:#fff">${scores[1]}</span>`;
+                saveScore(scores[1], "单人玩家", today);
             } else {
-                if (scores[1] > scores[2]) winText = `🏆 1P 獲勝！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else if (scores[2] > scores[1]) winText = `🏆 2P 獲勝！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">雙方皆為 ${scores[1]} 分</span>`;
+                if (scores[1] > scores[2]) winText = `🏆 1P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
+                else if (scores[2] > scores[1]) winText = `🏆 2P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
+                else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">双方皆为 ${scores[1]} 分</span>`;
                 
                 saveScore(scores[1], "1P 玩家", today);
                 saveScore(scores[2], "2P 玩家", today);
@@ -295,4 +296,42 @@
         }
 
         function saveScore(score, playerName, date) {
-            if (score === 0) return; // 0分不進
+            if (score === 0) return; 
+            let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
+            board.push({ name: playerName, score: score, date: date });
+            // 从高到低排序
+            board.sort((a, b) => b.score - a.score);
+            // 截取前五名
+            board = board.slice(0, 5);
+            localStorage.setItem('weaponLeaderboard', JSON.stringify(board));
+        }
+
+        function renderLeaderboard() {
+            let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
+            let tbody = `<tr><th>排名</th><th>身分</th><th>力量总计</th><th>日期</th></tr>`;
+            
+            if (board.length === 0) {
+                tbody += `<tr><td colspan="4" style="text-align:center;">尚无记录</td></tr>`;
+            } else {
+                board.forEach((entry, i) => {
+                    let rankClass = i < 3 ? `rank-${i+1}` : '';
+                    tbody += `<tr>
+                        <td class="${rankClass}">${i + 1}</td>
+                        <td>${entry.name}</td>
+                        <td style="color:var(--neon-pink); font-weight:bold;">${entry.score}</td>
+                        <td>${entry.date}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('leaderboard-table').innerHTML = tbody;
+        }
+
+        function clearLeaderboard() {
+            if(confirm("确定要清除所有的排行榜记录吗？")) {
+                localStorage.removeItem('weaponLeaderboard');
+                renderLeaderboard();
+            }
+        }
+    </script>
+</body>
+</html>
