@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>武器實驗室：終極對決</title>
+    <title>武器實驗室：終極對決 (排行榜版)</title>
     <style>
         :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg-dark: #0a0b10; }
         body { background: var(--bg-dark); color: white; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; text-align: center; }
         
         /* 開始畫面 */
-        #start-screen { margin-top: 100px; }
-        .mode-btn { background: var(--neon-blue); color: #000; border: none; padding: 15px 40px; font-size: 1.5em; font-weight: bold; border-radius: 50px; cursor: pointer; margin: 10px; transition: 0.3s; box-shadow: 0 0 15px var(--neon-blue); }
-        .mode-btn:hover { transform: scale(1.1); background: #fff; }
+        #start-screen { margin-top: 50px; }
+        .mode-btn { display: block; width: 300px; margin: 15px auto; background: var(--neon-blue); color: #000; border: none; padding: 15px 20px; font-size: 1.3em; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--neon-blue); }
+        .mode-btn:hover { transform: scale(1.05); background: #fff; }
 
         /* 遊戲畫面 */
         #game-screen { display: none; width: 100%; max-width: 800px; }
         
         /* 記分板 */
         .scoreboard { display: flex; justify-content: space-around; background: #1a1c25; padding: 15px; border-radius: 10px; border: 2px solid #333; margin-bottom: 20px; }
-        .player-score { font-size: 1.5em; font-weight: bold; color: #888; transition: 0.3s; }
-        .player-score.active { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); transform: scale(1.1); }
+        .player-score { font-size: 1.5em; font-weight: bold; color: #555; transition: 0.3s; padding: 10px; border-radius: 8px; }
+        .player-score.active { color: var(--neon-blue); background: rgba(0, 243, 255, 0.1); text-shadow: 0 0 10px var(--neon-blue); transform: scale(1.05); border: 1px solid var(--neon-blue); }
         .score-val { color: var(--neon-pink); font-size: 1.2em; }
 
         /* 題目區 */
         .question-box { background: rgba(0, 243, 255, 0.05); border: 1px dashed var(--neon-blue); padding: 40px 20px; border-radius: 10px; margin-bottom: 20px; position: relative; }
         .power-tag { position: absolute; top: 10px; right: 10px; color: var(--neon-pink); font-weight: bold; font-size: 1.2em; }
         .weapon-display { font-size: 2.5em; font-weight: bold; letter-spacing: 5px; margin: 20px 0; }
-        .drop-zone { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; }
+        .drop-zone { display: inline-block; width: 50px; height: 50px; line-height: 50px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
         /* 零件庫 */
         .inventory { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
@@ -39,11 +40,18 @@
         #clear-btn { background: #555; color: #fff; }
 
         /* 提示訊息 */
-        #msg-overlay { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; text-shadow: 0 0 20px #000; }
+        #msg-overlay { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); font-size: 3em; font-weight: bold; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; text-shadow: 0 0 20px #000; white-space: nowrap; }
         
-        /* 結算畫面 */
-        #end-screen { display: none; margin-top: 100px; }
-        #winner-text { font-size: 3em; color: var(--neon-pink); margin-bottom: 20px; text-shadow: 0 0 20px var(--neon-pink); }
+        /* 結算畫面與排行榜 */
+        #end-screen { display: none; margin-top: 50px; width: 100%; max-width: 600px; }
+        #winner-text { font-size: 2em; color: var(--neon-pink); margin-bottom: 20px; text-shadow: 0 0 15px var(--neon-pink); }
+        
+        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1a1c25; border-radius: 10px; overflow: hidden; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px; border-bottom: 1px solid #333; }
+        .leaderboard-table th { background: #2a2d3d; color: var(--neon-blue); }
+        .leaderboard-table td.rank-1 { color: gold; font-weight: bold; }
+        .leaderboard-table td.rank-2 { color: silver; font-weight: bold; }
+        .leaderboard-table td.rank-3 { color: #cd7f32; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -51,23 +59,24 @@
     <h1 style="color: var(--neon-pink);">⚔️ 零件補完計劃</h1>
 
     <div id="start-screen">
-        <button class="mode-btn" onclick="startGame(1)">單人挑戰</button>
-        <button class="mode-btn" onclick="startGame(2)">雙人對戰</button>
+        <h2>請選擇任務模式</h2>
+        <button class="mode-btn" onclick="startGame(1, 1)">👤 單人極限挑戰</button>
+        <button class="mode-btn" onclick="startGame(2, 1)">⚔️ 雙人對戰 (1P 先發)</button>
+        <button class="mode-btn" onclick="startGame(2, 2)">⚔️ 雙人對戰 (2P 先發)</button>
     </div>
 
     <div id="game-screen">
         <div class="scoreboard">
-            <div id="p1-panel" class="player-score">1P 玩家: <span id="p1-score" class="score-val">0</span></div>
-            <div id="p2-panel" class="player-score" style="display:none;">2P 玩家: <span id="p2-score" class="score-val">0</span></div>
+            <div id="p1-panel" class="player-score">1P 力量: <span id="p1-score" class="score-val">0</span></div>
+            <div id="p2-panel" class="player-score" style="display:none;">2P 力量: <span id="p2-score" class="score-val">0</span></div>
         </div>
 
         <div class="question-box">
-            <div class="power-tag">力量值: <span id="q-power">0</span></div>
+            <div class="power-tag">本題力量值: <span id="q-power">0</span></div>
             <div id="q-text" class="weapon-display"></div>
         </div>
 
-        <div class="inventory" id="inventory">
-            </div>
+        <div class="inventory" id="inventory"></div>
 
         <div class="controls">
             <button id="clear-btn" onclick="clearFills()">清除重填</button>
@@ -77,13 +86,21 @@
 
     <div id="end-screen">
         <div id="winner-text"></div>
-        <button class="mode-btn" onclick="location.reload()">重新開始</button>
+        
+        <div id="leaderboard-container">
+            <h3 style="color: var(--neon-blue);">🏆 武器實驗室 最高力量排行榜</h3>
+            <table class="leaderboard-table" id="leaderboard-table">
+                </table>
+        </div>
+
+        <br>
+        <button class="mode-btn" onclick="location.reload()" style="width: 200px;">重新開始任務</button>
+        <button class="mode-btn" onclick="clearLeaderboard()" style="width: 200px; background: #555; box-shadow: none; font-size: 1em;">清除排行榜數據</button>
     </div>
 
     <div id="msg-overlay"></div>
 
     <script>
-        // 題庫 (以 [零件] 代表需要填空的字)
         const allWeapons = [
             { pattern: "突擊[步][槍]", power: 300 },
             { pattern: "異能[槍]", power: 210 },
@@ -110,21 +127,21 @@
         const baseParts = ['槍', '步', '彈', '機', '手', '器', '輪'];
 
         let players = 1;
-        let turn = 1; // 1 = 1P, 2 = 2P
+        let turn = 1; 
         let scores = { 1: 0, 2: 0 };
         let questions = [];
         let currentQ = 0;
-        let currentAnswers = []; // 正確答案陣列
-        let userFills = []; // 玩家填寫的陣列
+        let currentAnswers = []; 
+        let userFills = []; 
 
-        // 洗牌函數
         function shuffle(array) {
             return array.sort(() => Math.random() - 0.5);
         }
 
-        // 開始遊戲
-        function startGame(mode) {
+        function startGame(mode, startingPlayer) {
             players = mode;
+            turn = startingPlayer;
+            
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'block';
             
@@ -132,7 +149,6 @@
                 document.getElementById('p2-panel').style.display = 'block';
             }
 
-            // 題庫打亂
             questions = shuffle([...allWeapons]);
             currentQ = 0;
             loadQuestion();
@@ -144,19 +160,16 @@
                 return;
             }
 
-            // 更新玩家回合顯示
             document.getElementById('p1-panel').classList.toggle('active', turn === 1);
             document.getElementById('p2-panel').classList.toggle('active', turn === 2);
 
             let q = questions[currentQ];
             document.getElementById('q-power').innerText = q.power;
 
-            // 解析題目
             let displayHTML = "";
             currentAnswers = [];
             userFills = [];
             
-            // 使用正則表達式切分題目
             let partsRegex = /\[(.*?)\]/g;
             let lastIdx = 0;
             let match;
@@ -174,16 +187,17 @@
             
             document.getElementById('q-text').innerHTML = displayHTML;
 
-            // 隨機打亂下方的零件按鈕
             let shuffledParts = shuffle([...baseParts]);
             let invHTML = "";
             shuffledParts.forEach(p => {
                 invHTML += `<div class="part" onclick="fillBlank('${p}')">${p}</div>`;
             });
             document.getElementById('inventory').innerHTML = invHTML;
+
+            // 鎖定按鈕防連點
+            document.getElementById('check-btn').disabled = false;
         }
 
-        // 玩家點擊零件填入
         function fillBlank(char) {
             let emptyIdx = userFills.indexOf("");
             if (emptyIdx !== -1) {
@@ -192,69 +206,93 @@
             }
         }
 
-        // 點擊已填入的格子可以單獨清除
         function clearSingle(idx) {
             userFills[idx] = "";
-            document.getElementById(`dz-${idx}`).innerText = "";
+            let dz = document.getElementById(`dz-${idx}`);
+            dz.innerText = "";
+            dz.classList.remove('corrected');
         }
 
-        // 清除全部
         function clearFills() {
             userFills = userFills.map(() => "");
-            document.querySelectorAll('.drop-zone').forEach(el => el.innerText = "");
+            document.querySelectorAll('.drop-zone').forEach(el => {
+                el.innerText = "";
+                el.classList.remove('corrected');
+            });
         }
 
-        // 核對答案
         function checkAnswer() {
             if (userFills.includes("")) {
                 alert("請填滿所有零件空缺！");
                 return;
             }
 
+            // 防止快速連點
+            document.getElementById('check-btn').disabled = true;
+
             let isCorrect = userFills.join("") === currentAnswers.join("");
             let q = questions[currentQ];
 
             if (isCorrect) {
-                showMsg("✅ 補完成功！", "#0f0");
+                showMsg(`✅ 補完成功！ +${q.power}`, "#0f0");
                 scores[turn] += q.power;
                 document.getElementById(`p${turn}-score`).innerText = scores[turn];
+                
+                setTimeout(nextPlayerQuestion, 1200);
             } else {
                 showMsg("❌ 零件錯誤！", "#f00");
-            }
+                
+                // 糾錯機制：把正確答案填進去並亮黃色
+                currentAnswers.forEach((ans, idx) => {
+                    let dz = document.getElementById(`dz-${idx}`);
+                    dz.innerText = ans;
+                    dz.classList.add('corrected');
+                });
 
-            setTimeout(() => {
-                currentQ++;
-                if (players === 2) {
-                    turn = turn === 1 ? 2 : 1; // 雙人模式換人
-                }
-                loadQuestion();
-            }, 1500);
+                // 給學生 2.5 秒看正確答案，再換下一題
+                setTimeout(nextPlayerQuestion, 2500);
+            }
         }
 
-        // 顯示結果動畫
+        function nextPlayerQuestion() {
+            currentQ++;
+            if (players === 2) {
+                turn = turn === 1 ? 2 : 1;
+            }
+            loadQuestion();
+        }
+
         function showMsg(text, color) {
             let overlay = document.getElementById('msg-overlay');
             overlay.innerText = text;
             overlay.style.color = color;
             overlay.style.opacity = 1;
-            setTimeout(() => overlay.style.opacity = 0, 1200);
+            setTimeout(() => overlay.style.opacity = 0, 1000);
         }
 
-        // 遊戲結束結算
+        // --- 排行榜系統 ---
         function endGame() {
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('end-screen').style.display = 'block';
             
             let winText = "";
+            let today = new Date().toLocaleDateString();
+
             if (players === 1) {
-                winText = `任務完成！<br>總力量值: <span style="color:#fff">${scores[1]}</span>`;
+                winText = `單人任務完成！<br>總力量值: <span style="color:#fff">${scores[1]}</span>`;
+                saveScore(scores[1], "單人玩家", today);
             } else {
-                if (scores[1] > scores[2]) winText = `🏆 1P 獲勝！<br><span style="font-size:0.5em">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else if (scores[2] > scores[1]) winText = `🏆 2P 獲勝！<br><span style="font-size:0.5em">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
-                else winText = `🤝 平手！<br><span style="font-size:0.5em">雙方皆為 ${scores[1]} 分</span>`;
+                if (scores[1] > scores[2]) winText = `🏆 1P 獲勝！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
+                else if (scores[2] > scores[1]) winText = `🏆 2P 獲勝！<br><span style="font-size:0.5em; color:#fff">1P: ${scores[1]} 分 / 2P: ${scores[2]} 分</span>`;
+                else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">雙方皆為 ${scores[1]} 分</span>`;
+                
+                saveScore(scores[1], "1P 玩家", today);
+                saveScore(scores[2], "2P 玩家", today);
             }
             document.getElementById('winner-text').innerHTML = winText;
+            
+            renderLeaderboard();
         }
-    </script>
-</body>
-</html>
+
+        function saveScore(score, playerName, date) {
+            if (score === 0) return; // 0分不進
