@@ -30,9 +30,9 @@
         .drop-zone { display: inline-block; width: 60px; height: 60px; line-height: 60px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
-        /* 零件库 */
+        /* 零件库 (优化按钮宽度以容纳编号) */
         .inventory { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
-        .part { width: 60px; height: 60px; line-height: 60px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.8em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
+        .part { padding: 0 20px; min-width: 60px; height: 60px; line-height: 60px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.5em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
         .part:active { transform: translateY(5px); background: var(--neon-pink); }
 
         /* 控制按钮 */
@@ -103,7 +103,7 @@
 
     <script>
         window.onload = function() {
-            // 题库逻辑：方括号 [] 内代表需要学生填入的零件。严格校对版本！
+            // 严格采用最新提供的 20 种武器列表与力量值
             const allWeapons = [
                 { pattern: "突击[步][枪]", power: 300 },
                 { pattern: "异能[枪]", power: 210 },
@@ -116,18 +116,27 @@
                 { pattern: "[机][枪]", power: 100 },
                 { pattern: "加特林[机][枪]", power: 100 },
                 { pattern: "永冻[枪]", power: 95 },
-                { pattern: "狙击[枪]", power: 90 },       // 严格修正：狙击枪不是狙击步枪
-                { pattern: "竞敌重槌", power: 80 },       
-                { pattern: "[手]枪", power: 75 },         
-                { pattern: "权杖", power: 70 },           
+                { pattern: "狙击[枪]", power: 90 },       
+                { pattern: "竞敌重槌", power: 80 }, // 无须填空
+                { pattern: "[步][枪]", power: 75 }, // 新增的步枪题目      
+                { pattern: "权杖", power: 70 },     // 无须填空      
                 { pattern: "霰[弹][枪]", power: 65 },
                 { pattern: "卡宾[枪]", power: 60 },
                 { pattern: "冲锋[枪]", power: 50 },
-                { pattern: "信号[枪]", power: 30 },
+                { pattern: "[手]枪", power: 30 },   // 手枪更新为 30 分，且只需填写手
                 { pattern: "烟雾[弹]", power: 1 }
             ];
 
-            const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
+            // 零件库更新为带编号的对象结构
+            const baseParts = [
+                { id: 1, char: '枪' },
+                { id: 2, char: '步' },
+                { id: 3, char: '弹' },
+                { id: 4, char: '机' },
+                { id: 5, char: '手' },
+                { id: 6, char: '器' },
+                { id: 7, char: '轮' }
+            ];
 
             window.players = 1;
             window.turn = 1; 
@@ -137,7 +146,7 @@
             window.currentAnswers = []; 
             window.userFills = []; 
 
-            // 升级：采用标准的 Fisher-Yates 完美洗牌算法，确保每次完全随机打乱！
+            // 完美的 Fisher-Yates 洗牌算法
             window.shuffle = function(array) {
                 let currentIndex = array.length, randomIndex;
                 while (currentIndex !== 0) {
@@ -198,11 +207,12 @@
                 
                 document.getElementById('q-text').innerHTML = displayHTML;
 
-                // 打乱下方 7 个零件的按钮顺序（使用完美洗牌算法）
+                // 打乱下方带编号的零件按钮
                 let shuffledParts = window.shuffle([...baseParts]);
                 let invHTML = "";
                 shuffledParts.forEach(p => {
-                    invHTML += `<div class="part" onclick="fillBlank('${p}')">${p}</div>`;
+                    // 按钮显示如 "1: 枪"，但填入空格时只有文字
+                    invHTML += `<div class="part" onclick="fillBlank('${p.char}')">${p.id}: ${p.char}</div>`;
                 });
                 document.getElementById('inventory').innerHTML = invHTML;
 
@@ -233,7 +243,6 @@
             };
 
             window.checkAnswer = function() {
-                // 如果题目有空缺且未填满，则拦截
                 if (window.currentAnswers.length > 0 && window.userFills.includes("")) {
                     alert("请填满所有零件空缺！");
                     return;
