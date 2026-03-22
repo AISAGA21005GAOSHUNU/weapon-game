@@ -30,7 +30,7 @@
         .drop-zone { display: inline-block; width: 60px; height: 60px; line-height: 60px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
-        /* 零件库 (优化按钮宽度以容纳编号) */
+        /* 零件库 (优化按钮宽度以容纳动态编号) */
         .inventory { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
         .part { padding: 0 20px; min-width: 60px; height: 60px; line-height: 60px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.5em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
         .part:active { transform: translateY(5px); background: var(--neon-pink); }
@@ -103,7 +103,7 @@
 
     <script>
         window.onload = function() {
-            // 严格采用最新提供的 20 种武器列表与力量值
+            // 题库逻辑：严格对应最新更正的力量值与答案要求
             const allWeapons = [
                 { pattern: "突击[步][枪]", power: 300 },
                 { pattern: "异能[枪]", power: 210 },
@@ -117,26 +117,18 @@
                 { pattern: "加特林[机][枪]", power: 100 },
                 { pattern: "永冻[枪]", power: 95 },
                 { pattern: "狙击[枪]", power: 90 },       
-                { pattern: "竞敌重槌", power: 80 }, // 无须填空
-                { pattern: "[步][枪]", power: 75 }, // 新增的步枪题目      
-                { pattern: "权杖", power: 70 },     // 无须填空      
+                { pattern: "竞敌重槌", power: 80 }, 
+                { pattern: "[步][枪]", power: 75 },      // 修正：75是步枪
+                { pattern: "权杖", power: 70 },          // 修正：70是权杖 (无须填空)
                 { pattern: "霰[弹][枪]", power: 65 },
                 { pattern: "卡宾[枪]", power: 60 },
                 { pattern: "冲锋[枪]", power: 50 },
-                { pattern: "[手]枪", power: 30 },   // 手枪更新为 30 分，且只需填写手
+                { pattern: "[手]枪", power: 30 },        // 修正：30是手枪 (只填手)
                 { pattern: "烟雾[弹]", power: 1 }
             ];
 
-            // 零件库更新为带编号的对象结构
-            const baseParts = [
-                { id: 1, char: '枪' },
-                { id: 2, char: '步' },
-                { id: 3, char: '弹' },
-                { id: 4, char: '机' },
-                { id: 5, char: '手' },
-                { id: 6, char: '器' },
-                { id: 7, char: '轮' }
-            ];
+            // 基础 7 个零件阵列
+            const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
 
             window.players = 1;
             window.turn = 1; 
@@ -146,7 +138,7 @@
             window.currentAnswers = []; 
             window.userFills = []; 
 
-            // 完美的 Fisher-Yates 洗牌算法
+            // 洗牌算法 (完美乱数)
             window.shuffle = function(array) {
                 let currentIndex = array.length, randomIndex;
                 while (currentIndex !== 0) {
@@ -168,7 +160,7 @@
                     document.getElementById('p2-panel').style.display = 'block';
                 }
 
-                // 打乱题目顺序
+                // 题目顺序随机大洗牌
                 window.questions = window.shuffle([...allWeapons]);
                 window.currentQ = 0;
                 window.loadQuestion();
@@ -207,12 +199,13 @@
                 
                 document.getElementById('q-text').innerHTML = displayHTML;
 
-                // 打乱下方带编号的零件按钮
+                // 【核心逻辑】：将 7 个零件随机打乱，然后依照打乱后的位置 (从左到右) 赋予 1 到 7 的动态编号
                 let shuffledParts = window.shuffle([...baseParts]);
                 let invHTML = "";
-                shuffledParts.forEach(p => {
-                    // 按钮显示如 "1: 枪"，但填入空格时只有文字
-                    invHTML += `<div class="part" onclick="fillBlank('${p.char}')">${p.id}: ${p.char}</div>`;
+                shuffledParts.forEach((char, index) => {
+                    let dynamicNum = index + 1; // 当前位置的编号
+                    // 按下按钮时，实际传入格子的是纯中文字 (char)
+                    invHTML += `<div class="part" onclick="fillBlank('${char}')">${dynamicNum}: ${char}</div>`;
                 });
                 document.getElementById('inventory').innerHTML = invHTML;
 
