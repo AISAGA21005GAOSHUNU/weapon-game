@@ -102,26 +102,24 @@
     <div id="msg-overlay"></div>
 
     <script>
-        // 确保整个网页载入完成后再执行核心逻辑，防止按钮失效
         window.onload = function() {
-            // 20种题库 (纯文字全简体，严格对齐图片缺字要求)
-            // 括号 [] 内的字代表需要学生填空的零件
+            // 题库逻辑：方括号 [] 内代表需要学生填入的零件。严格校对版本！
             const allWeapons = [
                 { pattern: "突击[步][枪]", power: 300 },
                 { pattern: "异能[枪]", power: 210 },
                 { pattern: "汽油[弹]", power: 200 },
-                { pattern: "左[轮][手][枪]", power: 165 },
-                { pattern: "扭曲[器]", power: 130 },
-                { pattern: "变形[机]", power: 120 },
+                { pattern: "左[轮][手][枪]", power: 165 }, 
+                { pattern: "扭曲[枪]", power: 130 },      
+                { pattern: "变形[枪]", power: 120 },      
                 { pattern: "榴[弹]发射[器]", power: 110 },
                 { pattern: "反[器]材[步][枪]", power: 105 },
                 { pattern: "[机][枪]", power: 100 },
                 { pattern: "加特林[机][枪]", power: 100 },
                 { pattern: "永冻[枪]", power: 95 },
-                { pattern: "狙击[步][枪]", power: 90 },
-                { pattern: "竞敌重槌[器]", power: 80 },
-                { pattern: "[手]枪", power: 75 },
-                { pattern: "权[器]", power: 70 },
+                { pattern: "狙击[枪]", power: 90 },       // 严格修正：狙击枪不是狙击步枪
+                { pattern: "竞敌重槌", power: 80 },       
+                { pattern: "[手]枪", power: 75 },         
+                { pattern: "权杖", power: 70 },           
                 { pattern: "霰[弹][枪]", power: 65 },
                 { pattern: "卡宾[枪]", power: 60 },
                 { pattern: "冲锋[枪]", power: 50 },
@@ -139,8 +137,15 @@
             window.currentAnswers = []; 
             window.userFills = []; 
 
+            // 升级：采用标准的 Fisher-Yates 完美洗牌算法，确保每次完全随机打乱！
             window.shuffle = function(array) {
-                return array.sort(() => Math.random() - 0.5);
+                let currentIndex = array.length, randomIndex;
+                while (currentIndex !== 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                }
+                return array;
             };
 
             window.startGame = function(mode, startingPlayer) {
@@ -154,6 +159,7 @@
                     document.getElementById('p2-panel').style.display = 'block';
                 }
 
+                // 打乱题目顺序
                 window.questions = window.shuffle([...allWeapons]);
                 window.currentQ = 0;
                 window.loadQuestion();
@@ -192,6 +198,7 @@
                 
                 document.getElementById('q-text').innerHTML = displayHTML;
 
+                // 打乱下方 7 个零件的按钮顺序（使用完美洗牌算法）
                 let shuffledParts = window.shuffle([...baseParts]);
                 let invHTML = "";
                 shuffledParts.forEach(p => {
@@ -226,14 +233,19 @@
             };
 
             window.checkAnswer = function() {
-                if (window.userFills.includes("")) {
+                // 如果题目有空缺且未填满，则拦截
+                if (window.currentAnswers.length > 0 && window.userFills.includes("")) {
                     alert("请填满所有零件空缺！");
                     return;
                 }
 
                 document.getElementById('check-btn').disabled = true;
 
-                let isCorrect = window.userFills.join("") === window.currentAnswers.join("");
+                let isCorrect = true;
+                if (window.currentAnswers.length > 0) {
+                    isCorrect = window.userFills.join("") === window.currentAnswers.join("");
+                }
+
                 let q = window.questions[window.currentQ];
 
                 if (isCorrect) {
