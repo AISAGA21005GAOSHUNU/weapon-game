@@ -104,12 +104,12 @@
     <script>
         // 确保整个网页载入完成后再执行核心逻辑，防止按钮失效
         window.onload = function() {
-            // 20种题库 (纯文字全简体)
+            // 20种题库 (纯文字全简体，严格对齐图片缺字要求)
+            // 括号 [] 内的字代表需要学生填空的零件
             const allWeapons = [
                 { pattern: "突击[步][枪]", power: 300 },
                 { pattern: "异能[枪]", power: 210 },
                 { pattern: "汽油[弹]", power: 200 },
-                // 左轮：加入手和枪的填空
                 { pattern: "左[轮][手][枪]", power: 165 },
                 { pattern: "扭曲[器]", power: 130 },
                 { pattern: "变形[机]", power: 120 },
@@ -120,7 +120,6 @@
                 { pattern: "永冻[枪]", power: 95 },
                 { pattern: "狙击[步][枪]", power: 90 },
                 { pattern: "竞敌重槌[器]", power: 80 },
-                // 手枪：枪变为固定字，只需填手
                 { pattern: "[手]枪", power: 75 },
                 { pattern: "权[器]", power: 70 },
                 { pattern: "霰[弹][枪]", power: 65 },
