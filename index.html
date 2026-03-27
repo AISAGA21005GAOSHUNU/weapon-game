@@ -30,9 +30,9 @@
         .drop-zone { display: inline-block; width: 60px; height: 60px; line-height: 60px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
-        /* 零件库 (优化按钮宽度以容纳动态编号) */
-        .inventory { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
-        .part { padding: 0 20px; min-width: 60px; height: 60px; line-height: 60px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.5em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
+        /* 零件库 (优化宽度与换行以容纳 13 个零件) */
+        .inventory { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; max-width: 700px; }
+        .part { padding: 0 15px; min-width: 50px; height: 50px; line-height: 50px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.3em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
         .part:active { transform: translateY(5px); background: var(--neon-pink); }
 
         /* 控制按钮 */
@@ -103,32 +103,32 @@
 
     <script>
         window.onload = function() {
-            // 题库逻辑：严格对应最新更正的力量值与答案要求
+            // 题库逻辑：依指令将包含特定字眼的武器，更改挖空目标为「变、能、汽、击、重、特」
             const allWeapons = [
-                { pattern: "突击[步][枪]", power: 300 },
-                { pattern: "异能[枪]", power: 210 },
-                { pattern: "汽油[弹]", power: 200 },
-                { pattern: "左[轮][手][枪]", power: 165 }, 
-                { pattern: "扭曲[枪]", power: 130 },      
-                { pattern: "变形[枪]", power: 120 },      
-                { pattern: "榴[弹]发射[器]", power: 110 },
-                { pattern: "反[器]材[步][枪]", power: 105 },
-                { pattern: "[机][枪]", power: 100 },
-                { pattern: "加特林[机][枪]", power: 100 },
-                { pattern: "永冻[枪]", power: 95 },
-                { pattern: "狙击[枪]", power: 90 },       
-                { pattern: "竞敌重槌", power: 80 }, 
-                { pattern: "[步][枪]", power: 75 },      // 修正：75是步枪
-                { pattern: "权杖", power: 70 },          // 修正：70是权杖 (无须填空)
-                { pattern: "霰[弹][枪]", power: 65 },
-                { pattern: "卡宾[枪]", power: 60 },
-                { pattern: "冲锋[枪]", power: 50 },
-                { pattern: "[手]枪", power: 30 },        // 修正：30是手枪 (只填手)
-                { pattern: "烟雾[弹]", power: 1 }
+                { pattern: "突[击]步枪", power: 300 },     // 更改为填 击
+                { pattern: "异[能]枪", power: 210 },       // 更改为填 能
+                { pattern: "[汽]油弹", power: 200 },       // 更改为填 汽
+                { pattern: "左[轮][手][枪]", power: 165 }, // 维持
+                { pattern: "扭曲[枪]", power: 130 },       // 维持
+                { pattern: "[变]形枪", power: 120 },       // 更改为填 变
+                { pattern: "榴[弹]发射[器]", power: 110 }, // 维持
+                { pattern: "反[器]材[步][枪]", power: 105 }, // 维持
+                { pattern: "[机][枪]", power: 100 },       // 维持
+                { pattern: "加[特]林机枪", power: 100 },   // 更改为填 特
+                { pattern: "永冻[枪]", power: 95 },        // 维持
+                { pattern: "狙[击]枪", power: 90 },        // 更改为填 击
+                { pattern: "竞敌[重]槌", power: 80 },      // 更改为填 重
+                { pattern: "[步][枪]", power: 75 },        // 维持
+                { pattern: "权杖", power: 70 },            // 维持无须填空
+                { pattern: "霰[弹][枪]", power: 65 },      // 维持
+                { pattern: "卡宾[枪]", power: 60 },        // 维持
+                { pattern: "冲锋[枪]", power: 50 },        // 维持
+                { pattern: "[手]枪", power: 30 },          // 维持
+                { pattern: "烟雾[弹]", power: 1 }          // 维持
             ];
 
-            // 基础 7 个零件阵列
-            const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮'];
+            // 扩充基础零件库，加入 6 个新字，总共 13 个零件
+            const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮', '变', '能', '汽', '击', '重', '特'];
 
             window.players = 1;
             window.turn = 1; 
@@ -160,7 +160,6 @@
                     document.getElementById('p2-panel').style.display = 'block';
                 }
 
-                // 题目顺序随机大洗牌
                 window.questions = window.shuffle([...allWeapons]);
                 window.currentQ = 0;
                 window.loadQuestion();
@@ -199,12 +198,11 @@
                 
                 document.getElementById('q-text').innerHTML = displayHTML;
 
-                // 【核心逻辑】：将 7 个零件随机打乱，然后依照打乱后的位置 (从左到右) 赋予 1 到 7 的动态编号
+                // 打乱 13 个零件，并动态生成 1 到 13 的编号
                 let shuffledParts = window.shuffle([...baseParts]);
                 let invHTML = "";
                 shuffledParts.forEach((char, index) => {
-                    let dynamicNum = index + 1; // 当前位置的编号
-                    // 按下按钮时，实际传入格子的是纯中文字 (char)
+                    let dynamicNum = index + 1;
                     invHTML += `<div class="part" onclick="fillBlank('${char}')">${dynamicNum}: ${char}</div>`;
                 });
                 document.getElementById('inventory').innerHTML = invHTML;
