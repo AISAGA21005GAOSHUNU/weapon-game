@@ -8,8 +8,12 @@
         :root { --neon-blue: #00f3ff; --neon-pink: #ff00ff; --bg-dark: #0a0b10; }
         body { background: var(--bg-dark); color: white; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; text-align: center; }
         
-        /* 开始画面 */
+        /* 开始画面与等级选单 */
         #start-screen { margin-top: 50px; }
+        .level-selector { margin: 20px auto; padding: 15px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 10px; width: 300px; }
+        .level-selector label { font-size: 1.2em; font-weight: bold; color: var(--neon-blue); display: block; margin-bottom: 10px; }
+        .level-selector select { width: 100%; padding: 10px; font-size: 1.2em; background: #000; color: var(--neon-pink); border: 1px solid var(--neon-pink); border-radius: 5px; outline: none; cursor: pointer; text-align: center; font-weight: bold; }
+        
         .mode-btn { display: block; width: 300px; margin: 15px auto; background: var(--neon-blue); color: #000; border: none; padding: 15px 20px; font-size: 1.3em; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--neon-blue); }
         .mode-btn:hover { transform: scale(1.05); background: #fff; }
 
@@ -17,10 +21,11 @@
         #game-screen { display: none; width: 100%; max-width: 800px; }
         
         /* 记分板 */
-        .scoreboard { display: flex; justify-content: space-around; background: #1a1c25; padding: 15px; border-radius: 10px; border: 2px solid #333; margin-bottom: 20px; }
+        .scoreboard { display: flex; justify-content: space-around; background: #1a1c25; padding: 15px; border-radius: 10px; border: 2px solid #333; margin-bottom: 20px; position: relative; }
         .player-score { font-size: 1.5em; font-weight: bold; color: #555; transition: 0.3s; padding: 10px; border-radius: 8px; }
         .player-score.active { color: var(--neon-blue); background: rgba(0, 243, 255, 0.1); text-shadow: 0 0 10px var(--neon-blue); transform: scale(1.05); border: 1px solid var(--neon-blue); }
         .score-val { color: var(--neon-pink); font-size: 1.2em; }
+        .level-badge { position: absolute; top: -15px; background: var(--neon-pink); color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; box-shadow: 0 0 10px var(--neon-pink); }
 
         /* 题目区 */
         .question-box { background: rgba(0, 243, 255, 0.05); border: 1px dashed var(--neon-blue); padding: 50px 20px; border-radius: 10px; margin-bottom: 20px; position: relative; }
@@ -30,7 +35,7 @@
         .drop-zone { display: inline-block; width: 60px; height: 60px; line-height: 60px; border-bottom: 4px solid #fff; margin: 0 5px; color: var(--neon-pink); text-align: center; vertical-align: middle; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .drop-zone.corrected { color: #ffeb3b; border-bottom-color: #ffeb3b; background: rgba(255, 235, 59, 0.2); text-shadow: 0 0 10px #ffeb3b; }
 
-        /* 零件库 (优化宽度与换行以容纳 13 个零件) */
+        /* 零件库 */
         .inventory { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; max-width: 700px; }
         .part { padding: 0 15px; min-width: 50px; height: 50px; line-height: 50px; background: #222; border: 2px solid var(--neon-pink); font-size: 1.3em; font-weight: bold; border-radius: 10px; cursor: pointer; user-select: none; transition: 0.2s; }
         .part:active { transform: translateY(5px); background: var(--neon-pink); }
@@ -60,7 +65,22 @@
     <h1 style="color: var(--neon-pink);">⚔️ 零件补完计划</h1>
 
     <div id="start-screen">
-        <h2>请选择任务模式</h2>
+        <div class="level-selector">
+            <label for="game-level">⭐ 选择挑战等级</label>
+            <select id="game-level">
+                <option value="1">等级 1 (分数 1 倍)</option>
+                <option value="2">等级 2 (分数 2 倍)</option>
+                <option value="3">等级 3 (分数 3 倍)</option>
+                <option value="4">等级 4 (分数 4 倍)</option>
+                <option value="5">等级 5 (分数 5 倍)</option>
+                <option value="6">等级 6 (分数 6 倍)</option>
+                <option value="7">等级 7 (分数 7 倍)</option>
+                <option value="8">等级 8 (分数 8 倍)</option>
+                <option value="9">等级 9 (分数 9 倍)</option>
+                <option value="10">等级 10 (分数 10 倍)</option>
+            </select>
+        </div>
+
         <button class="mode-btn" onclick="startGame(1, 1)">👤 单人极限挑战</button>
         <button class="mode-btn" onclick="startGame(2, 1)">⚔️ 双人对战 (1P 先发)</button>
         <button class="mode-btn" onclick="startGame(2, 2)">⚔️ 双人对战 (2P 先发)</button>
@@ -68,12 +88,13 @@
 
     <div id="game-screen">
         <div class="scoreboard">
+            <div class="level-badge" id="display-level">当前等级: 1</div>
             <div id="p1-panel" class="player-score">1P 力量: <span id="p1-score" class="score-val">0</span></div>
             <div id="p2-panel" class="player-score" style="display:none;">2P 力量: <span id="p2-score" class="score-val">0</span></div>
         </div>
 
         <div class="question-box">
-            <div class="power-tag">力量值: <span id="q-power">0</span></div>
+            <div class="power-tag">基础力量: <span id="q-power">0</span></div>
             <div id="q-text" class="weapon-display"></div>
         </div>
 
@@ -95,7 +116,7 @@
         </div>
 
         <br>
-        <button class="mode-btn" onclick="location.reload()" style="width: 200px;">重新开始任务</button>
+        <button class="mode-btn" onclick="location.reload()" style="width: 200px;">返回主选单</button>
         <button class="mode-btn" onclick="clearLeaderboard()" style="width: 200px; background: #555; box-shadow: none; font-size: 1em;">清除排行榜数据</button>
     </div>
 
@@ -103,35 +124,36 @@
 
     <script>
         window.onload = function() {
-            // 题库逻辑：依指令将包含特定字眼的武器，更改挖空目标为「变、能、汽、击、重、特」
+            // 题库逻辑
             const allWeapons = [
-                { pattern: "突[击]步枪", power: 300 },     // 更改为填 击
-                { pattern: "异[能]枪", power: 210 },       // 更改为填 能
-                { pattern: "[汽]油弹", power: 200 },       // 更改为填 汽
-                { pattern: "左[轮][手][枪]", power: 165 }, // 维持
-                { pattern: "扭曲[枪]", power: 130 },       // 维持
-                { pattern: "[变]形枪", power: 120 },       // 更改为填 变
-                { pattern: "榴[弹]发射[器]", power: 110 }, // 维持
-                { pattern: "反[器]材[步][枪]", power: 105 }, // 维持
-                { pattern: "[机][枪]", power: 100 },       // 维持
-                { pattern: "加[特]林机枪", power: 100 },   // 更改为填 特
-                { pattern: "永冻[枪]", power: 95 },        // 维持
-                { pattern: "狙[击]枪", power: 90 },        // 更改为填 击
-                { pattern: "竞敌[重]槌", power: 80 },      // 更改为填 重
-                { pattern: "[步][枪]", power: 75 },        // 维持
-                { pattern: "权杖", power: 70 },            // 维持无须填空
-                { pattern: "霰[弹][枪]", power: 65 },      // 维持
-                { pattern: "卡宾[枪]", power: 60 },        // 维持
-                { pattern: "冲锋[枪]", power: 50 },        // 维持
-                { pattern: "[手]枪", power: 30 },          // 维持
-                { pattern: "烟雾[弹]", power: 1 }          // 维持
+                { pattern: "突[击]步枪", power: 300 },
+                { pattern: "异[能]枪", power: 210 },
+                { pattern: "[汽]油弹", power: 200 },
+                { pattern: "左[轮][手][枪]", power: 165 },
+                { pattern: "扭曲[枪]", power: 130 },
+                { pattern: "[变]形枪", power: 120 },
+                { pattern: "榴[弹]发射[器]", power: 110 },
+                { pattern: "反[器]材[步][枪]", power: 105 },
+                { pattern: "[机][枪]", power: 100 },
+                { pattern: "加[特]林机枪", power: 100 },
+                { pattern: "永冻[枪]", power: 95 },
+                { pattern: "狙[击]枪", power: 90 },
+                { pattern: "竞敌[重]槌", power: 80 },
+                { pattern: "[步][枪]", power: 75 },
+                { pattern: "权杖", power: 70 },
+                { pattern: "霰[弹][枪]", power: 65 },
+                { pattern: "卡宾[枪]", power: 60 },
+                { pattern: "冲锋[枪]", power: 50 },
+                { pattern: "[手]枪", power: 30 },
+                { pattern: "烟雾[弹]", power: 1 }
             ];
 
-            // 扩充基础零件库，加入 6 个新字，总共 13 个零件
+            // 13 个基础零件
             const baseParts = ['枪', '步', '弹', '机', '手', '器', '轮', '变', '能', '汽', '击', '重', '特'];
 
             window.players = 1;
             window.turn = 1; 
+            window.gameLevel = 1; // 新增等级变数
             window.scores = { 1: 0, 2: 0 };
             window.questions = [];
             window.currentQ = 0;
@@ -152,6 +174,10 @@
             window.startGame = function(mode, startingPlayer) {
                 window.players = mode;
                 window.turn = startingPlayer;
+                
+                // 获取玩家选择的等级
+                window.gameLevel = parseInt(document.getElementById('game-level').value);
+                document.getElementById('display-level').innerText = `当前等级: ${window.gameLevel}`;
                 
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'block';
@@ -198,7 +224,7 @@
                 
                 document.getElementById('q-text').innerHTML = displayHTML;
 
-                // 打乱 13 个零件，并动态生成 1 到 13 的编号
+                // 打乱 13 个零件，并动态生成编号
                 let shuffledParts = window.shuffle([...baseParts]);
                 let invHTML = "";
                 shuffledParts.forEach((char, index) => {
@@ -249,8 +275,10 @@
                 let q = window.questions[window.currentQ];
 
                 if (isCorrect) {
-                    window.showMsg(`✅ 补完成功！ +${q.power}`, "#0f0");
-                    window.scores[window.turn] += q.power;
+                    // 等级分数加成计算
+                    let earnedPower = q.power * window.gameLevel;
+                    window.showMsg(`✅ 补完成功！ +${earnedPower}`, "#0f0");
+                    window.scores[window.turn] += earnedPower;
                     document.getElementById(`p${window.turn}-score`).innerText = window.scores[window.turn];
                     
                     setTimeout(window.nextPlayerQuestion, 1200);
@@ -289,17 +317,18 @@
                 
                 let winText = "";
                 let today = new Date().toLocaleDateString();
+                let levelStr = `(Lv.${window.gameLevel})`;
 
                 if (window.players === 1) {
                     winText = `单人任务完成！<br>总力量值: <span style="color:#fff">${window.scores[1]}</span>`;
-                    window.saveScore(window.scores[1], "单人玩家", today);
+                    window.saveScore(window.scores[1], `单人玩家 ${levelStr}`, today);
                 } else {
                     if (window.scores[1] > window.scores[2]) winText = `🏆 1P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${window.scores[1]} 分 / 2P: ${window.scores[2]} 分</span>`;
                     else if (window.scores[2] > window.scores[1]) winText = `🏆 2P 获胜！<br><span style="font-size:0.5em; color:#fff">1P: ${window.scores[1]} 分 / 2P: ${window.scores[2]} 分</span>`;
                     else winText = `🤝 平手！<br><span style="font-size:0.5em; color:#fff">双方皆为 ${window.scores[1]} 分</span>`;
                     
-                    window.saveScore(window.scores[1], "1P 玩家", today);
-                    window.saveScore(window.scores[2], "2P 玩家", today);
+                    window.saveScore(window.scores[1], `1P 玩家 ${levelStr}`, today);
+                    window.saveScore(window.scores[2], `2P 玩家 ${levelStr}`, today);
                 }
                 document.getElementById('winner-text').innerHTML = winText;
                 
@@ -322,7 +351,7 @@
             window.renderLeaderboard = function() {
                 try {
                     let board = JSON.parse(localStorage.getItem('weaponLeaderboard')) || [];
-                    let tbody = `<tr><th>排名</th><th>身份</th><th>力量总计</th><th>日期</th></tr>`;
+                    let tbody = `<tr><th>排名</th><th>身份 (等级)</th><th>力量总计</th><th>日期</th></tr>`;
                     
                     if (board.length === 0) {
                         tbody += `<tr><td colspan="4" style="text-align:center;">尚无记录</td></tr>`;
