@@ -132,8 +132,9 @@
 
     <script>
         window.onload = function() {
+            // 题库逻辑：突击步枪更新为 突[击][步][枪]
             const allWeapons = [
-                { pattern: "突[击]步枪", power: 300 },
+                { pattern: "突[击][步][枪]", power: 300 },
                 { pattern: "异[能]枪", power: 210 },
                 { pattern: "[汽]油弹", power: 200 },
                 { pattern: "左[轮][手][枪]", power: 165 },
@@ -182,7 +183,6 @@
                 window.players = mode;
                 window.turn = startingPlayer;
                 
-                // 获取等级与玩家名称
                 window.gameLevel = parseInt(document.getElementById('game-level').value);
                 
                 let p1Input = document.getElementById('p1-name').value.trim();
@@ -191,7 +191,6 @@
                 window.p1Name = p1Input !== "" ? p1Input : (mode === 1 ? "单人玩家" : "1P 玩家");
                 window.p2Name = p2Input !== "" ? p2Input : "2P 玩家";
 
-                // 更新 UI 显示
                 document.getElementById('display-level').innerText = `当前等级: ${window.gameLevel}`;
                 document.getElementById('p1-name-display').innerText = window.p1Name;
                 document.getElementById('p2-name-display').innerText = window.p2Name;
